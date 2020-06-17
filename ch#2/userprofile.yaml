@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userprofile-deployment
+  #namespace: api
+  labels:
+    deploy: userprofile
+    app: userprofile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+      - image: "openhackaksacr.azurecr.io/userprofile:1.0"
+        imagePullPolicy: Always
+        name: mydrive-user
+        livenessProbe:
+          httpGet:
+            path: /api/user/healthcheck
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /api/user/healthcheck
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP
+          - containerPort: 443
+            name: https
+            protocol: TCP
+
+        envFrom:
+          - secretRef:
+              name: mydbsecrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userprofile-svc
+  labels:
+    app: userprofile
+    #namespace: api
+spec:
+  type: ClusterIP
+  selector:
+    app: user
+  ports:
+    - protocol: TCP
+      name: user-http
+      port: 80
+      targetPort: 80
+    - protocol: TCP
+      name: user-https
+      port: 443
+      targetPort: 443
