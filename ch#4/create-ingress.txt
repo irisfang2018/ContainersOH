@@ -1,0 +1,12 @@
+Download Helm from  -- https://github.com/helm/helm/releases/tag/v3.2.4
+
+# Add the official stable repository
+helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+
+kubectl create --namespace ingress-ns
+
+helm install kanginx-ingress stable/nginx-ingress \
+    --namespace ingress-ns \
+    --set controller.replicaCount=1 \
+    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
