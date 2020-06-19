@@ -1,0 +1,44 @@
+======
+1. Create a Key Vault 
+az keyvault create -n aks-secrets-keyvault -g aksRG
+======
+
+2. Create a service principal 
+az ad sp create-for-rbac --skip-assignment
+
+{
+  "appId": "xxx",
+  "displayName": "azure-cli-2020-06-19-16-12-57",
+  "name": "http://azure-cli-2020-06-19-16-12-57",
+  "password": "xxx",
+  "tenant": "xxx"
+}
+======
+az keyvault set-policy -n aks-secrets-keyvault \
+    --spn $appId --secret-permissions get list
+======
+kubectl create secret generic mykvsecret \
+    --from-literal clientid=$appId \
+    --from-literal clientsecret=$password
+======
+Create secrets from Azure Portal or via cli
+az keyvault secret set --vault-name aks-secrets-keyvault \
+    --name SQL-USER --value "xyz"
+az keyvault secret set --vault-name aks-secrets-keyvault \
+    --name SQL-PASSWORD --value verySuperSecret2
+az keyvault secret set --vault-name aks-secrets-keyvault \
+    --name SQL-DBNAME --value "mydrivingDB"
+az keyvault secret set --vault-name aks-secrets-keyvault \
+    --name SQL-SERVER --value "xyz"
+
+=====
+helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
+helm install csi-secrets csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
+=====
+
+create secretProviderClass.yaml
+create poi-kv-csidriver.yaml
+Deploy both yamls
+Exec into the Pod
+cd /mnt/secrets
+check your secrets
