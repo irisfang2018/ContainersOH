@@ -1,0 +1,61 @@
+#  POI deploymet with CSI Driver
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poi-deployment-kv
+  #namespace: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poi
+      version: "1.0"
+  template:
+    metadata:
+      labels:
+        app: poi
+        version: "1.0"
+    spec:
+      containers:
+      - name: poi
+        image: "openhackaksacr.azurecr.io/poi:1.0"
+        imagePullPolicy: Always
+
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - name: secrets
+          mountPath: "/mnt/secrets"
+          readOnly: true
+      volumes:
+      - name: secrets
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "aks-secrets-keyvault"
+          nodePublishSecretRef:
+            name: mykvsecret
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: poi-svc
+  #  namespace: api
+spec:
+  type: ClusterIP
+  selector:
+    app: poi
+  ports:
+    - protocol: TCP
+      name: poi-http
+      port: 80
+      targetPort: 80
+    - protocol: TCP
+      name: poi-https
+      port: 443
+      targetPort: 443
