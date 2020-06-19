@@ -1,0 +1,76 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: team2-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: hacker5rol@OTAPRD1533ops.onmicrosoft.com
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: web-edit-role-binding
+  namespace: web
+roleRef:
+  kind: ClusterRole
+  name: edit
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: webdev@OTAPRD1533ops.onmicrosoft.com
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: web-view-role-binding
+  namespace: web
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: apidev@OTAPRD1533ops.onmicrosoft.com
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: api-edit-role-binding
+  namespace: api
+roleRef:
+  kind: ClusterRole
+  name: edit
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: apidev@OTAPRD1533ops.onmicrosoft.com
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: api-view-role-binding
+  namespace: api
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: webdev@OTAPRD1533ops.onmicrosoft.com
