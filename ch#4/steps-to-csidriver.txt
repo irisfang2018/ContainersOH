@@ -1,3 +1,8 @@
+
+#Key Vault name is aks-secrets-keyvault
+#generic secret name is mykvsecret
+#resource group name is aksRG
+
 ======
 1. Create a Key Vault 
 az keyvault create -n aks-secrets-keyvault -g aksRG
