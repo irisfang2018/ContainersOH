@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tripviewer-deployment
+  namespace: web
+  labels:
+    app: tripviewer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: tripviewer
+      labels:
+        app: tripviewer
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: tripviewer
+        image: registryicp7204.azurecr.io/tripviewer2:1.0
+        imagePullPolicy: Always
+        env:
+        - name: WCF_SVC
+          value: "http://wcfsvc-svc.api"
+        - name: WCF_ENDPOINT
+          value: "http://wcfsvc-svc.api"
+        - name: WCF_SERVICE_ENDPOINT
+          value: "http://wcfsvc-svc.api"
+        - name: USERPROFILE_API_ENDPOINT
+          value: "http://userprofile-svc.api"
+        - name: USER_API_ENDPOINT
+          value: "http://userprofile-svc.api"
+        - name: TRIPS_API_ENDPOINT
+          value: "http://trips-svc.api"
+        - name: BING_MAPS_KEY
+          value: ""
+        ports:
+          - containerPort: 80
+  selector:
+    matchLabels:
+      app: tripviewer
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: tripviewer-svc
+  namespace: web
+spec:
+  #type: LoadBalancer
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+  selector:
+    app: tripviewer
