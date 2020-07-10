@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userjava-deployment
+  namespace: api
+  labels:
+    aadpodidbinding: azure-kv
+    deploy: userjava
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: userjava
+  template:
+    metadata:
+      labels:
+        app: userjava
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+      - image: "registryfxh8749.azurecr.io/user-java:1.0"
+        volumeMounts:
+        - name: secrets
+          mountPath: "/mnt/secrets"
+          readOnly: true
+        imagePullPolicy: Always
+        name: userjava
+        # livenessProbe:
+        #   httpGet:
+        #     path: /api/user-java/healthcheck
+        #     port: 80
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 30
+        # readinessProbe:
+        #   httpGet:
+        #     path: /api/user-java/healthcheck
+        #     port: 80
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 5
+        ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP
+          - containerPort: 443
+            name: https
+            protocol: TCP
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          - name: PORT
+            value: '80'
+          - name: SQL_SERVER
+            valueFrom:
+              secretKeyRef:
+                name: secrets-store-creds-2
+                key: SQLSERVER
+          - name: SQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secrets-store-creds-2
+                key: SQLPASSWORD
+          - name: SQL_DBNAME
+            valueFrom:
+              secretKeyRef:
+                name: secrets-store-creds-2
+                key: SQLDBNAME
+          - name:  SQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: secrets-store-creds-2
+                key: SQLUSER
+      volumes:
+          - name: secrets
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "secret-provider-kv"
+              nodePublishSecretRef:
+                name: secrets-store-creds
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userjava-svc
+  #namespace: api
+spec:
+  type: ClusterIP
+  selector:
+    app: userjava
+  ports:
+    - protocol: TCP
+      name: userjava-http
+      port: 80
+      targetPort: 80
+    - protocol: TCP
+      name: userjava-https
+      port: 443
+      targetPort: 443
