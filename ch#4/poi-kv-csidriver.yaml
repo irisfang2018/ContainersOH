@@ -6,6 +6,7 @@ metadata:
   name: poi-deployment
   namespace: api
   labels:
+  #aadpodidbinding: azure-kv
     deploy: poi
 spec:
   replicas: 1
@@ -17,17 +18,16 @@ spec:
       labels:
         app: poi
     spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
       containers:
       - image: "registryvzr4937.azurecr.io/poi:1.0"
+        volumeMounts:
+        - name: secrets
+          mountPath: "/secrets"
+          readOnly: true
         imagePullPolicy: Always
         name: poi
-        env:
-          - name: WEB_SERVER_BASE_URI
-            value: 'http://0.0.0.0'
-          - name: WEB_PORT
-            value: '80'
-          - name: ASPNETCORE_ENVIRONMENT
-            value: 'Production'
         ports:
           - containerPort: 80
             name: http
@@ -35,9 +35,25 @@ spec:
           - containerPort: 443
             name: https
             protocol: TCP
-        envFrom:
-          - secretRef:
-              name: mydbsecrets
+        env:
+          - name: WEB_SERVER_BASE_URI
+            value: 'http://0.0.0.0'
+          - name: WEB_PORT
+            value: '80'
+          - name: ASPNETCORE_ENVIRONMENT
+            value: 'Production'
+      volumes:
+          - name: secrets
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: "secret-provider-kv"
+              nodePublishSecretRef:
+                name: secrets-store-creds
+
+
+
 ---
 apiVersion: v1
 kind: Service
