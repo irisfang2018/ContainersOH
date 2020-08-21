@@ -3,49 +3,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: poi-deployment-kv
-  #namespace: api
+  name: poi-deployment
+  namespace: api
+  labels:
+    deploy: poi
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: poi
-      version: "1.0"
   template:
     metadata:
       labels:
         app: poi
-        version: "1.0"
     spec:
       containers:
-      - name: poi
-        image: "openhackaksacr.azurecr.io/poi:1.0"
+      - image: "registryvzr4937.azurecr.io/poi:1.0"
         imagePullPolicy: Always
-
+        name: poi
+        env:
+          - name: WEB_SERVER_BASE_URI
+            value: 'http://0.0.0.0'
+          - name: WEB_PORT
+            value: '80'
+          - name: ASPNETCORE_ENVIRONMENT
+            value: 'Production'
         ports:
-        - containerPort: 80
-          name: http
-        volumeMounts:
-        - name: secrets
-          mountPath: "/mnt/secrets"
-          readOnly: true
-      volumes:
-      - name: secrets
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "aks-secrets-keyvault"
-          nodePublishSecretRef:
-            name: mykvsecret
-
---- 
-
+          - containerPort: 80
+            name: http
+            protocol: TCP
+          - containerPort: 443
+            name: https
+            protocol: TCP
+        envFrom:
+          - secretRef:
+              name: mydbsecrets
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: poi-svc
-  #  namespace: api
+  namespace: api
 spec:
   type: ClusterIP
   selector:
