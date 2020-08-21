@@ -1,49 +1,69 @@
+# Key Vault portion
+# KV Variables
+echo "Setting up the variables..."
+keyVaultName="ka-ohkeyvault0818"
 
-#Key Vault name is aks-secrets-keyvault
-#generic secret name is mykvsecret
-#resource group name is aksRG
+adminSqlLogin="sqladminvZr4937"
+password="xxxx"
+FQDN="sqlservervzr4937.database.windows.net"
+databaseName="mydrivingDB" 
 
-======
-1. Create a Key Vault 
-az keyvault create -n aks-secrets-keyvault -g aksRG
-======
+secret1Name="DatabaseLogin"
+secret2Name="DatabasePassword"
+secret3Name="Databaseserver"
+secret4Name="Databasename" 
 
-2. Create a service principal 
-az ad sp create-for-rbac --skip-assignment
+secret1AliasRef="SQL_USER"
+secret2AliasRef="SQL_PASSWORD" 
+secret3AliasRef="SQL_SERVER" 
+secret4AliasRef="SQL_DBNAME" 
 
-{
-  "appId": "xxx",
-  "displayName": "azure-cli-2020-06-19-16-12-57",
-  "name": "http://azure-cli-2020-06-19-16-12-57",
-  "password": "xxx",
-  "tenant": "xxx"
-}
-======
-az keyvault set-policy -n aks-secrets-keyvault \
-    --spn $appId --secret-permissions get list
-======
-kubectl create secret generic mykvsecret \
-    --from-literal clientid=$appId \
-    --from-literal clientsecret=$password
-======
-Create secrets from Azure Portal or via cli
-az keyvault secret set --vault-name aks-secrets-keyvault \
-    --name SQL-USER --value "xyz"
-az keyvault secret set --vault-name aks-secrets-keyvault \
-    --name SQL-PASSWORD --value verySuperSecret2
-az keyvault secret set --vault-name aks-secrets-keyvault \
-    --name SQL-DBNAME --value "mydrivingDB"
-az keyvault secret set --vault-name aks-secrets-keyvault \
-    --name SQL-SERVER --value "xyz"
+resourceGroupName="teamResources"
+location="eastus"
+subscriptionId="b53a5b8e-b158-4114-89f7-4a254169c6d6"
+aksName="myManagedCluster"
 
-=====
-helm repo add csi-secrets-store-provider-azure https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/charts
-helm install csi-secrets csi-secrets-store-provider-azure/csi-secrets-store-provider-azure
-=====
+echo "Creating Key Vault..."
+keyVault=$(az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json)
+keyVault=$(az keyvault show -n $keyVaultName | ConvertFrom-Json) # retrieve existing KV
 
-create secretProviderClass.yaml
-create poi-kv-csidriver.yaml
-Deploy both yamls
-Exec into the Pod
-cd /mnt/secrets
-check your secrets
+echo "Creating Secrets in Key Vault..."
+az keyvault secret set --name $secret1Name --value $adminSqlLogin --vault-name $keyVaultName #Username
+az keyvault secret set --name $secret2Name --value $password --vault-name $keyVaultName #Password
+az keyvault secret set --name $secret3Name --value $FQDN --vault-name $keyVaultName #server
+az keyvault secret set --name $secret4Name --value $databaseName --vault-name $keyVaultName #dbname
+
+# Create a Service Principal
+SPName = "akskvsp"
+az ad sp create-for-rbac --skip-assignment --name $SPName
+
+# Assigning the APPID
+appid=$(az ad sp show --id http://${SPName} --query appId -o tsv)
+secret=$(az ad sp credential reset --name $SPName --credential-description "APClientSecret" --query password -o tsv)
+
+# Assigning the Secret
+#secret=$(az ad sp credential reset --name $SPName --credential-description "APClientSecret" --query password -o tsv)
+
+# This setting the policy steps
+az role assignment create --role Reader --assignee $appid --scope /subscriptions/$subscriptionId/resourcegroups/$resourceGroupName/providers/Microsoft.KeyVault/vaults/$keyVaultName
+
+az keyvault set-policy -n $keyVaultName --secret-permissions get --spn $appid
+
+az aks update-credentials --resource-group $resourceGroupName --name $aksName  --reset-service-principal --service-principal $appid --client-secret $secret
+
+# Create the Secret
+kubectl create secret generic secrets-store-creds --from-literal clientid=$appid  --from-literal clientsecret=$secret -n api
+
+# Install CSI Driver 
+echo "Adding Helm repo for Secret Store CSI..."
+helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts
+
+echo "Installing Secrets Store CSI Driver using Helm..."
+kubectl create ns csi-driver
+helm install csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --namespace csi-driver
+kubectl get pods --namespace csi-driver
+
+echo "Installing Secrets Store CSI Driver with Azure Key Vault Provider..."
+kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml --namespace csi-driver
+kubectl get pods -n csi-driver
+
