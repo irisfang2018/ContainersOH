@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tripviewer-deploy
+  namespace: web
+  labels:
+    deploy: tripviewer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tripviewer
+  template:
+    metadata:
+      labels:
+        app: tripviewer
+    spec:
+      containers:
+      - image: "registryvzr4937.azurecr.io/tripviewer:1.0"
+        imagePullPolicy: Always
+        name: tripviewer
+        ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP
+        env:
+          - name: USER_API_ENDPOINT
+            value: "http://user-svc.api"
+          - name: USERPROFILE_API_ENDPOINT
+            value: "http://user-svc.api"
+          - name: TRIPS_API_ENDPOINT
+            value: "http://trips-svc.api"
+          - name: BING_MAPS_KEY
+            value: "Aj5lHDzdCgzQinbEYxyVbPYiOcMzRaZyLC1O_zM-k8ViwEzmusa287ZGlc9q8Qr"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tripviewer-svc
+  namespace: web
+spec:
+  type: ClusterIP
+  selector:
+    app: tripviewer
+  ports:
+    - protocol: TCP
+      name: tripviewer-http
+      port: 80
+      targetPort: 80
+    - protocol: TCP
+      name: tripviewer-https
+      port: 443
+      targetPort: 443
