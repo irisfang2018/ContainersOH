@@ -9,7 +9,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: hacker5rol@OTAPRD1533ops.onmicrosoft.com
+  name: hacker1iuu@OTAPRD276ops.onmicrosoft.com
 
 ---
 
@@ -19,7 +19,7 @@ metadata:
   name: web-edit-role-binding
   namespace: web
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: edit
   apiGroup: rbac.authorization.k8s.io
 subjects:
@@ -51,7 +51,7 @@ metadata:
   name: api-edit-role-binding
   namespace: api
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: edit
   apiGroup: rbac.authorization.k8s.io
 subjects:
