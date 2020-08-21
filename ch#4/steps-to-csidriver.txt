@@ -24,8 +24,8 @@ subscriptionId="b53a5b8e-b158-4114-89f7-4a254169c6d6"
 aksName="myManagedCluster"
 
 echo "Creating Key Vault..."
-keyVault=$(az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7 | ConvertFrom-Json)
-keyVault=$(az keyvault show -n $keyVaultName | ConvertFrom-Json) # retrieve existing KV
+keyVault=$(az keyvault create -n $keyVaultName -g $resourceGroupName -l $location --enable-soft-delete true --retention-days 7)
+keyVault=$(az keyvault show -n $keyVaultName --output json) # retrieve existing KV
 
 echo "Creating Secrets in Key Vault..."
 az keyvault secret set --name $secret1Name --value $adminSqlLogin --vault-name $keyVaultName #Username
