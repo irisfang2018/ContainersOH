@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: poi
+  name: poi-deployment
   labels:
     app: poi
   namespace: api
@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: poi
-        image: registryadn3555.azurecr.io/poi:latest
+        image: registryirf8267.azurecr.io/poi:1.0
         ports:
         - containerPort: 80
         volumeMounts:
@@ -39,7 +39,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: poi
+  name: poi-svc
   namespace: api
 spec:
   ports:
