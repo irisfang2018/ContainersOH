@@ -47,6 +47,10 @@ spec:
   selector:
     app: poi
 ---
+#A service profile is a custom Kubernetes resource (CRD) that can provide Linkerd additional information about a service. 
+#In particular, it allows you to define a list of routes for the service. Each route uses a regular expression to define 
+#which paths should match that route.
+
 apiVersion: linkerd.io/v1alpha2
 kind: ServiceProfile
 metadata:
