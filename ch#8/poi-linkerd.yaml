@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poi
+  labels:
+    app: poi
+  namespace: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: poi
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: poi
+    spec:
+      containers:
+      - name: poi
+        image: registryadn3555.azurecr.io/poi:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: vol
+          mountPath: '/secrets'
+          readOnly: true
+      volumes:
+      - name: vol
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: azure
+          nodePublishSecretRef:
+            name: secrets-store-creds
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: poi
+  namespace: api
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: poi
+---
+apiVersion: linkerd.io/v1alpha2
+kind: ServiceProfile
+metadata:
+  name: poi.api.svc.cluster.local
+  namespace: api
+spec:
+  routes:
+  - name: GET /api
+    condition:
+      method: GET
+      pathRegex: /api
+    isRetryable: true
+  retryBudget:
+    retryRatio: 0.2
+    minRetriesPerSecond: 10
+    ttl: 10s
