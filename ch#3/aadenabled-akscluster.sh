@@ -41,6 +41,9 @@ az role assignment create \
     --assignee $ACCOUNT_ID \
     --scope $AKS_CLUSTER \
     --role "Azure Kubernetes Service Cluster Admin Role"
+    
+#Login as user that's part of MyAKSAdminGroup
+az login
 
 #Access an Azure AD enabled cluster
 az aks get-credentials --resource-group rg-containerOH --name MyAADAKSCluster
