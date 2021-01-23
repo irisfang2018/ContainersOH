@@ -11,7 +11,7 @@ az ad group list --filter "displayname eq 'myAKSAdminGroup'" -o table
 #Create an AKS cluster with AAD and Managed Identity 
 az aks create -g rg-containerOH \
 -n MyAADAKSCluster --enable-aad \
---aad-admin-group-object-ids 12f09079-2d28-4fff-b78e-b741db0c7cb6 --enable-managed-identity
+--aad-admin-group-object-ids 12f09079-2d28-4fff-b78e-b741db0c7cb6 --aad-tenant-id 874fdfaa-1983-4571-8766-a525025d2537 --enable-managed-identity
 
 #Access an Azure AD enabled cluster
 az aks get-credentials --resource-group rg-containerOH --name MyAADAKSCluster
