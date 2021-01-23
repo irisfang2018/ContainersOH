@@ -16,6 +16,9 @@ az aks create -g rg-containerOH \
 #Access an Azure AD enabled cluster
 az aks get-credentials --resource-group rg-containerOH --name MyAADAKSCluster
 
+#Get nodes of AKS cluster
+kubectl get nodes
+
 #######It should fail for you.########
 
 
