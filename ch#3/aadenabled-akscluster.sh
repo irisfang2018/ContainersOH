@@ -10,11 +10,11 @@ az ad group list --filter "displayname eq 'myAKSAdminGroup'" -o table
 
 #Create an AKS cluster with AAD and Managed Identity 
 az aks create -g rg-containerOH \
--n MyManagedCluster --enable-aad \
+-n MyAADAKSCluster --enable-aad \
 --aad-admin-group-object-ids 12f09079-2d28-4fff-b78e-b741db0c7cb6 --enable-managed-identity
 
 #Access an Azure AD enabled cluster
-az aks get-credentials --resource-group rg-containerOH --name MyManagedCluster
+az aks get-credentials --resource-group rg-containerOH --name MyAADAKSCluster
 
 #######It should fail for you.########
 
@@ -23,7 +23,7 @@ az aks get-credentials --resource-group rg-containerOH --name MyManagedCluster
 
 #Assign role permissions to a user or group 
 # Get the resource ID of your AKS cluster
-AKS_CLUSTER=$(az aks show --resource-group rg-containerOH --name MyManagedCluster --query id -o tsv)
+AKS_CLUSTER=$(az aks show --resource-group rg-containerOH --name MyAADAKSCluster --query id -o tsv)
 
 #Somehow this didn't work well in bash shell. In that case get the output of
 #az aks show --resource-group rg-containerOH --name MyManagedCluster --query id -o tsv and store it in AKS_CLUSTER variable
@@ -40,7 +40,7 @@ az role assignment create \
     --role "Azure Kubernetes Service Cluster Admin Role"
 
 #Access an Azure AD enabled cluster
-az aks get-credentials --resource-group rg-containerOH --name MyManagedCluster
+az aks get-credentials --resource-group rg-containerOH --name MyAADAKSCluster
 
 #Get nodes of AKS cluster
 kubectl get nodes
