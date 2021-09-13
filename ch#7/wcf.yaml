@@ -1,0 +1,37 @@
+apiVersion: apps/v1  
+kind: Deployment  
+metadata:  
+  name: wcfsvc
+  labels:
+    app: wcfsvc
+spec:  
+  replicas: 1
+  template:
+    metadata:
+      name: wcfsvc
+      labels:
+        app: wcfsvc
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": windows
+      containers:
+      - name: wcf
+        image: {{registry}}.azurecr.io/wcfservice:1.0
+        ports:
+          - containerPort: 80
+  selector:
+    matchLabels:
+      app: wcfsvc
+---
+ apiVersion: v1
+ kind: Service
+ metadata:
+   name: wcfsvc
+ spec:
+   type: ClusterIP
+   externalName: wcfsvc
+   ports:
+   - protocol: TCP
+     port: 80
+   selector:
+     app: wcfsvc
